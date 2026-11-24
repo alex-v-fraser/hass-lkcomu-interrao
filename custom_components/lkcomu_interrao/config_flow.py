@@ -32,7 +32,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from custom_components.lkcomu_interrao._util import import_api_cls
+from custom_components.lkcomu_interrao._util import async_import_api_cls
 from custom_components.lkcomu_interrao.const import (
     API_TYPE_DEFAULT,
     API_TYPE_NAMES,
@@ -76,7 +76,6 @@ class LkcomuInterRAOConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Inter RAO config entries."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     CACHED_API_TYPE_NAMES: ClassVar[Optional[Dict[str, Any]]] = {}
 
@@ -151,7 +150,7 @@ class LkcomuInterRAOConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured_service")
 
         try:
-            api_cls = import_api_cls(type_)
+            api_cls = await async_import_api_cls(self.hass, type_)
         except (ImportError, AttributeError):
             _LOGGER.error("Could not find API type: %s", type_)
             return self.async_abort(reason="api_load_error")
@@ -309,11 +308,9 @@ class LkcomuInterRAOConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_ACCOUNTS], True
             )
 
+        api_cls = await async_import_api_cls(self.hass, current_config[CONF_TYPE])
         return self.async_create_entry(
-            title=self.make_entry_title(
-                import_api_cls(current_config[CONF_TYPE]),
-                current_config[CONF_USERNAME],
-            ),
+            title=self.make_entry_title(api_cls, current_config[CONF_USERNAME]),
             data=_flatten(current_config),
         )
 
@@ -329,7 +326,7 @@ class LkcomuInterRAOConfigFlow(ConfigFlow, domain=DOMAIN):
         if await self._check_entry_exists(type_, username):
             return self.async_abort(reason="already_exists")
 
-        api_cls = import_api_cls(type_)
+        api_cls = await async_import_api_cls(self.hass, type_)
 
         return self.async_create_entry(
             title=self.make_entry_title(api_cls, username),

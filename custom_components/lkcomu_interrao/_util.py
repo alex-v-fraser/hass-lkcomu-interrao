@@ -21,6 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.core import HomeAssistant
 
 from custom_components.lkcomu_interrao.const import DOMAIN
@@ -61,10 +62,11 @@ def _find_existing_entry(
             return config_entry
 
 
-def import_api_cls(type_: str) -> Type["BaseEnergosbytAPI"]:
-    return __import__(
-        "inter_rao_energosbyt.api." + type_, globals(), locals(), ("API",)
-    ).API
+async def async_import_api_cls(
+    hass: HomeAssistant, type_: str
+) -> Type["BaseEnergosbytAPI"]:
+    module = await async_import_module(hass, f"inter_rao_energosbyt.api.{type_}")
+    return module.API
 
 
 _RE_USERNAME_MASK = re.compile(r"^(\W*)(.).*(.)$")

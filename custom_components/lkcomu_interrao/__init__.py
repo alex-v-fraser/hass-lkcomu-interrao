@@ -33,7 +33,7 @@ from custom_components.lkcomu_interrao._util import (
     _find_existing_entry,
     _make_log_prefix,
     async_get_icons_for_providers,
-    import_api_cls,
+    async_import_api_cls,
     mask_username,
 )
 from custom_components.lkcomu_interrao.const import (
@@ -260,7 +260,7 @@ async def async_setup_entry(
     from inter_rao_energosbyt.exceptions import EnergosbytException
 
     try:
-        api_cls = import_api_cls(type_)
+        api_cls = await async_import_api_cls(hass, type_)
     except (ImportError, AttributeError):
         _LOGGER.error(
             log_prefix
